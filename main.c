@@ -22,13 +22,32 @@ void screen_wobble() {
     scanline_offsets[5] = 6;
     scanline_offsets[6] = 5;
     scanline_offsets[7] = 4;
-    STAT_REG = 0x30;
-    LYC_REG = 0x00;
     scanline_ly_offset = 0;
 
     set_interrupts(VBL_IFLAG | LCD_IFLAG);
     for(UINT8 i = 0; i < 40; ++i){
         wait_vbl_done();
+        wait_vbl_done();
+        wait_vbl_done();
+        ++scanline_ly_offset;
+    }
+    set_interrupts(VBL_IFLAG);
+    SCX_REG = 4;
+}
+
+void screen_checkered() {
+    scanline_offsets[0] = 4;
+    scanline_offsets[1] = 4;
+    scanline_offsets[2] = 6;
+    scanline_offsets[3] = 6;
+    scanline_offsets[4] = 4;
+    scanline_offsets[5] = 4;
+    scanline_offsets[6] = 6;
+    scanline_offsets[7] = 6;
+    scanline_ly_offset = 0;
+
+    set_interrupts(VBL_IFLAG | LCD_IFLAG);
+    for(UINT8 i = 0; i < 50; ++i){
         wait_vbl_done();
         wait_vbl_done();
         ++scanline_ly_offset;
@@ -44,6 +63,9 @@ void main() {
     printf(" \n\n\n      TEST FOR\n\n    WOBBLES WITH\n\n      GBDK 2020");
     // default offset
     move_bkg(4, 0);
+    // configure scanline interrupts
+    STAT_REG = 0x30;
+    LYC_REG = 0x00;
     DISPLAY_ON;
 
     disable_interrupts();
@@ -56,8 +78,12 @@ void main() {
         switch (joypad()) {
         case J_A:
         case J_B:
-        case J_START:
             screen_wobble();
+            delay(100);
+            break;
+        case J_SELECT:
+        case J_START:
+            screen_checkered();
             delay(100);
             break;
         default:
