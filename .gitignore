@@ -1,0 +1,6 @@
+*.gb
+*.lst
+*.map
+*.rel
+*.s
+*.sym
