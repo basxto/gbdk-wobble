@@ -11,12 +11,15 @@ build: $(ROM)
 %.gb: %.rel
 	$(MKROM) -o $@ $^
 
-%.s: %.c
-	$(CC) -S -o $@ $^
 
 %.rel: %.s
 	$(CA) -o $@ $^
 
+.SECONDARY:
+%.s: %.c
+	$(CC) -S -o $@ $^
+
+.PHONY:
 run: $(ROM)
 	$(EMU) $<
 
