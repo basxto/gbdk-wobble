@@ -6,51 +6,39 @@
 #include <gb/hardware.h>
 #include <stdio.h>
 
-UINT8 scanline_offsets[8];
+const UINT8 scanline_wobble[] = {4,5,6,7,7,6,5,4,4,5,6,7,7,6,5};
+const UINT8 scanline_checkered[] = {4,4,6,6,4,4,6,6,4,4,6};
+UINT8 *scanline_offsets;
 UINT8 scanline_ly_offset;
 
 void scanline_isr() {
-    SCX_REG = scanline_offsets[(UINT8)((UINT8)LY_REG + scanline_ly_offset)%8];
+    SCX_REG = scanline_offsets[LY_REG%8];
 }
 
 void screen_wobble() {
-    scanline_offsets[0] = 4;
-    scanline_offsets[1] = 5;
-    scanline_offsets[2] = 6;
-    scanline_offsets[3] = 7;
-    scanline_offsets[4] = 7;
-    scanline_offsets[5] = 6;
-    scanline_offsets[6] = 5;
-    scanline_offsets[7] = 4;
     scanline_ly_offset = 0;
+    scanline_offsets = &scanline_wobble[0];
 
     set_interrupts(VBL_IFLAG | LCD_IFLAG);
     for(UINT8 i = 0; i < 40; ++i){
         wait_vbl_done();
         wait_vbl_done();
         wait_vbl_done();
-        ++scanline_ly_offset;
+        scanline_offsets = &scanline_wobble[(++scanline_ly_offset)%8];
     }
     set_interrupts(VBL_IFLAG);
     SCX_REG = 4;
 }
 
 void screen_checkered() {
-    scanline_offsets[0] = 4;
-    scanline_offsets[1] = 4;
-    scanline_offsets[2] = 6;
-    scanline_offsets[3] = 6;
-    scanline_offsets[4] = 4;
-    scanline_offsets[5] = 4;
-    scanline_offsets[6] = 6;
-    scanline_offsets[7] = 6;
     scanline_ly_offset = 0;
+    scanline_offsets = &scanline_checkered[0];
 
     set_interrupts(VBL_IFLAG | LCD_IFLAG);
     for(UINT8 i = 0; i < 50; ++i){
         wait_vbl_done();
         wait_vbl_done();
-        ++scanline_ly_offset;
+        scanline_offsets = &scanline_checkered[(++scanline_ly_offset)%4];
     }
     set_interrupts(VBL_IFLAG);
     SCX_REG = 4;
@@ -64,7 +52,7 @@ void main() {
     // default offset
     move_bkg(4, 0);
     // configure scanline interrupts
-    STAT_REG = 0x30;
+    STAT_REG = 0x08;
     LYC_REG = 0x00;
     DISPLAY_ON;
 
