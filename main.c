@@ -8,7 +8,7 @@
 
 const UINT8 scanline_wobble[] = {4,5,6,7,7,6,5,4,4,5,6,7,7,6,5};
 const UINT8 scanline_checkered[] = {4,4,6,6,4,4,6,6,4,4,6};
-UINT8 *scanline_offsets;
+const UINT8 *scanline_offsets;
 UINT8 scanline_ly_offset;
 
 void scanline_isr() {
@@ -22,6 +22,20 @@ void screen_wobble() {
     set_interrupts(VBL_IFLAG | LCD_IFLAG);
     for(UINT8 i = 0; i < 40; ++i){
         wait_vbl_done();
+        wait_vbl_done();
+        wait_vbl_done();
+        scanline_offsets = &scanline_wobble[(++scanline_ly_offset)%8];
+    }
+    set_interrupts(VBL_IFLAG);
+    SCX_REG = 4;
+}
+
+void screen_wobble_in() {
+    scanline_ly_offset = 0;
+    scanline_offsets = &scanline_wobble[0];
+
+    set_interrupts(VBL_IFLAG | LCD_IFLAG);
+    for(UINT8 i = 2; i < 42; ++i){
         wait_vbl_done();
         wait_vbl_done();
         scanline_offsets = &scanline_wobble[(++scanline_ly_offset)%8];
@@ -52,7 +66,7 @@ void main() {
     // default offset
     move_bkg(4, 0);
     // configure scanline interrupts
-    STAT_REG = 0x08;
+    STAT_REG = 0x18;
     LYC_REG = 0x00;
     DISPLAY_ON;
 
@@ -65,8 +79,11 @@ void main() {
 
         switch (joypad()) {
         case J_A:
-        case J_B:
             screen_wobble();
+            delay(100);
+            break;
+        case J_B:
+            screen_wobble_in();
             delay(100);
             break;
         case J_SELECT:
