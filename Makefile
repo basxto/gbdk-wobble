@@ -8,6 +8,9 @@ ROM=main.gb
 .PHONY:
 build: $(ROM)
 
+main.gb: main.rel scanlines.rel
+	$(MKROM) -o $@ $^
+
 %.gb: %.rel
 	$(MKROM) -o $@ $^
 
